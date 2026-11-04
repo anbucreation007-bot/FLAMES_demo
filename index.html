@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#080d24">
+  <meta name="description" content="AR Flames — a playful FLAMES name game. Enter two names and reveal your result.">
+  <title>AR Flames — Discover Your Connection</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #080d24;
+      --panel: rgba(18, 27, 62, .72);
+      --panel-strong: rgba(20, 31, 72, .92);
+      --text: #f7f8ff;
+      --muted: #aeb9dc;
+      --cyan: #58e7ff;
+      --blue: #6385ff;
+      --pink: #ff7bd5;
+      --line: rgba(172, 199, 255, .18);
+      --shadow: 0 24px 80px rgba(0, 0, 0, .34);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+      color: var(--text);
+      background:
+        radial-gradient(ellipse at 12% 12%, rgba(63, 100, 255, .24), transparent 34rem),
+        radial-gradient(ellipse at 88% 58%, rgba(0, 218, 255, .13), transparent 32rem),
+        radial-gradient(ellipse at 60% 100%, rgba(255, 91, 205, .10), transparent 28rem),
+        var(--bg);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button, input { font: inherit; }
+    button, a, input { -webkit-tap-highlight-color: transparent; }
+    a { color: inherit; text-decoration: none; }
+    button:focus-visible, a:focus-visible, input:focus-visible {
+      outline: 3px solid var(--cyan);
+      outline-offset: 3px;
+    }
+    .ambient { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+    .orb { position: absolute; width: 24rem; height: 24rem; border-radius: 50%; filter: blur(85px); opacity: .18; animation: drift 13s ease-in-out infinite alternate; }
+    .orb.one { top: -10rem; left: -8rem; background: #476aff; }
+    .orb.two { right: -11rem; bottom: -10rem; background: #00d9ff; animation-delay: -5s; }
+    .orb.three { top: 42%; left: 48%; width: 15rem; height: 15rem; background: #ff4dc4; opacity: .10; animation-delay: -8s; }
+    @keyframes drift { to { transform: translate(4rem, 3rem) scale(1.14); } }
+    .container { width: min(1160px, calc(100% - 40px)); margin-inline: auto; }
+    .navbar {
+      position: sticky; top: 0; z-index: 20;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      background: rgba(8, 13, 36, .72); backdrop-filter: blur(18px);
+    }
+    .nav-inner { min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; font-size: 1.25rem; font-weight: 850; letter-spacing: -.04em; }
+    .brand-mark {
+      display: grid; place-items: center; width: 40px; height: 40px; border-radius: 14px;
+      background: linear-gradient(135deg, #5be9ff, #6b75ff 65%, #ff78d7);
+      box-shadow: 0 0 28px rgba(83, 215, 255, .28); font-size: 1.2rem;
+    }
+    .brand span { color: var(--cyan); }
+    .nav-links { display: flex; align-items: center; gap: 28px; color: var(--muted); font-size: .92rem; }
+    .nav-links a:hover { color: var(--cyan); }
+    .sound-toggle {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      min-height: 40px; padding: 9px 13px; border: 1px solid var(--line);
+      border-radius: 999px; color: var(--text); background: rgba(255,255,255,.04); cursor: pointer;
+    }
+    .sound-toggle[aria-pressed="true"] { border-color: rgba(88,231,255,.55); color: var(--cyan); }
+    .hero { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(340px, .95fr); align-items: center; gap: clamp(36px, 7vw, 90px); padding: 76px 0 82px; }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 9px; margin-bottom: 20px;
+      color: var(--cyan); font-size: .77rem; font-weight: 800; letter-spacing: .19em; text-transform: uppercase;
+    }
+    .eyebrow::before { content: ""; width: 25px; height: 1px; background: currentColor; }
+    h1 { max-width: 700px; margin: 0; font-size: clamp(3.2rem, 7vw, 6.1rem); line-height: .99; letter-spacing: -.075em; }
+    .gradient-text { color: transparent; background: linear-gradient(100deg, #6deaff 5%, #7c9bff 50%, #ff8bdb 95%); background-clip: text; -webkit-background-clip: text; }
+    .intro { max-width: 570px; margin: 25px 0 30px; color: var(--muted); font-size: clamp(1rem, 1.7vw, 1.12rem); line-height: 1.8; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 10px; }
+    .pill { padding: 8px 12px; border: 1px solid var(--line); border-radius: 999px; color: #d7e0ff; background: rgba(255,255,255,.035); font-size: .82rem; }
+    .game-card {
+      position: relative; isolation: isolate; padding: 1px; border-radius: 30px;
+      background: linear-gradient(145deg, rgba(88,231,255,.8), rgba(105,123,255,.42) 42%, rgba(255,123,213,.5));
+      box-shadow: var(--shadow), 0 0 65px rgba(71, 120, 255, .12);
+    }
+    .game-card::before { content: ""; position: absolute; z-index: -1; inset: 14% -8%; border-radius: inherit; background: linear-gradient(120deg, #45dcff, #7b79ff, #ff6bcb); filter: blur(55px); opacity: .18; }
+    .game-inner { padding: clamp(24px, 4vw, 38px); border-radius: 29px; background: linear-gradient(150deg, rgba(21,31,73,.98), rgba(10,17,44,.98)); }
+    .card-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 28px; }
+    .card-kicker { color: #e1e8ff; font-size: .9rem; font-weight: 750; }
+    .live-dot { display: inline-flex; align-items: center; gap: 7px; color: #a9b7d8; font-size: .75rem; }
+    .live-dot::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #6fffd0; box-shadow: 0 0 12px #6fffd0; }
+    .field { display: block; margin-bottom: 17px; }
+    .field span { display: block; margin-bottom: 9px; color: #c4cdeb; font-size: .82rem; font-weight: 700; }
+    .input-wrap { position: relative; }
+    .input-wrap .field-icon { position: absolute; top: 50%; left: 16px; transform: translateY(-50%); font-size: 1.1rem; pointer-events: none; }
+    .input-wrap input {
+      width: 100%; min-height: 56px; padding: 15px 16px 15px 48px;
+      border: 1px solid rgba(179,198,255,.18); border-radius: 15px;
+      color: white; background: rgba(255,255,255,.045); outline: none; transition: border-color .2s, box-shadow .2s, background .2s;
+    }
+    .input-wrap input::placeholder { color: #7e8bb4; }
+    .input-wrap input:focus { border-color: rgba(88,231,255,.8); background: rgba(255,255,255,.07); box-shadow: 0 0 0 4px rgba(88,231,255,.08); }
+    .heart-divider { display: flex; align-items: center; gap: 12px; margin: 1px 0 18px; color: #ff8edc; font-size: .82rem; }
+    .heart-divider::before, .heart-divider::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,142,220,.35), transparent); }
+    .primary-btn, .secondary-btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+      min-height: 54px; padding: 14px 20px; border: 0; border-radius: 15px;
+      font-weight: 800; cursor: pointer; transition: transform .2s, box-shadow .2s, filter .2s;
+    }
+    .primary-btn { width: 100%; color: #071329; background: linear-gradient(100deg, #69edff, #92a6ff 58%, #ff9cde); box-shadow: 0 10px 30px rgba(91,190,255,.18); }
+    .primary-btn:hover, .secondary-btn:hover { transform: translateY(-2px); filter: brightness(1.06); }
+    .primary-btn:active, .secondary-btn:active { transform: translateY(0); }
+    .form-note { margin: 13px 0 0; color: #8492bb; text-align: center; font-size: .75rem; line-height: 1.55; }
+    .form-error { min-height: 20px; margin: 10px 0 0; color: #ff9fbc; font-size: .85rem; text-align: center; }
+    .showcase { display: grid; place-items: center; min-height: 270px; margin: 4px 0 24px; }
+    .flame-orbit { position: relative; display: grid; place-items: center; width: 220px; height: 220px; border: 1px solid rgba(111,213,255,.2); border-radius: 50%; background: radial-gradient(circle, rgba(68,132,255,.15), transparent 68%); }
+    .flame-orbit::before, .flame-orbit::after { content: ""; position: absolute; inset: 15px; border: 1px dashed rgba(143,175,255,.25); border-radius: 50%; animation: spin 24s linear infinite; }
+    .flame-orbit::after { inset: 31px; border-style: solid; border-color: rgba(255,123,213,.18); animation-direction: reverse; animation-duration: 18s; }
+    .flame-emoji { z-index: 1; font-size: 5.2rem; filter: drop-shadow(0 0 24px rgba(88,231,255,.5)); animation: float 3.2s ease-in-out infinite; }
+    .orbit-label { position: absolute; z-index: 2; padding: 7px 10px; border: 1px solid var(--line); border-radius: 999px; color: #dce8ff; background: #101a40; font-size: .7rem; }
+    .orbit-label.top { top: 3px; left: 50%; transform: translateX(-50%); }
+    .orbit-label.right { right: -28px; top: 50%; transform: translateY(-50%); }
+    .orbit-label.bottom { bottom: 3px; left: 50%; transform: translateX(-50%); }
+    .orbit-label.left { left: -25px; top: 50%; transform: translateY(-50%); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes float { 50% { transform: translateY(-9px) rotate(3deg); } }
+    .section { padding: 48px 0 82px; }
+    .section-heading { margin: 0 0 12px; text-align: center; font-size: clamp(1.8rem, 4vw, 2.7rem); letter-spacing: -.05em; }
+    .section-subtitle { max-width: 590px; margin: 0 auto 32px; color: var(--muted); text-align: center; line-height: 1.7; }
+    .meaning-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+    .meaning-card { padding: 22px; border: 1px solid var(--line); border-radius: 20px; background: rgba(255,255,255,.035); }
+    .meaning-card .emoji { font-size: 1.7rem; }
+    .meaning-card h3 { margin: 12px 0 7px; font-size: 1rem; }
+    .meaning-card p { margin: 0; color: var(--muted); font-size: .88rem; line-height: 1.65; }
+    .result-section { display: none; padding: 0 0 78px; scroll-margin-top: 95px; }
+    .result-section.show { display: block; animation: reveal .7s cubic-bezier(.2,.8,.2,1) both; }
+    @keyframes reveal { from { opacity: 0; transform: translateY(22px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    .result-panel { position: relative; max-width: 760px; margin: 0 auto; padding: clamp(25px, 5vw, 48px); overflow: hidden; text-align: center; border: 1px solid rgba(112,205,255,.32); border-radius: 28px; background: linear-gradient(145deg, rgba(22,34,80,.95), rgba(12,18,46,.95)); box-shadow: 0 22px 70px rgba(0,0,0,.25), 0 0 50px rgba(76,146,255,.09); }
+    .result-panel::before { content: ""; position: absolute; width: 240px; height: 240px; top: -150px; left: calc(50% - 120px); background: #5b82ff; filter: blur(80px); opacity: .25; pointer-events: none; }
+    .result-eyebrow { position: relative; color: var(--cyan); font-size: .76rem; font-weight: 850; letter-spacing: .18em; text-transform: uppercase; }
+    .result-emoji { position: relative; margin: 18px 0 4px; font-size: 3.2rem; }
+    .result-names { position: relative; color: #b9c8ef; font-size: .96rem; overflow-wrap: anywhere; }
+    .result-name { position: relative; margin: 10px 0; font-size: clamp(2.5rem, 7vw, 4.3rem); font-weight: 900; letter-spacing: -.06em; background: linear-gradient(100deg, #73edff, #a8b4ff, #ff9cde); color: transparent; background-clip: text; -webkit-background-clip: text; }
+    .result-description { position: relative; max-width: 510px; margin: 0 auto 25px; color: var(--muted); line-height: 1.7; }
+    .result-actions { position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+    .secondary-btn { min-height: 48px; color: #eaf0ff; border: 1px solid var(--line); background: rgba(255,255,255,.055); }
+    .result-disclaimer { position: relative; margin: 23px 0 0; color: #7f8db5; font-size: .75rem; }
+    .confetti { position: absolute; top: -20px; width: 8px; height: 12px; border-radius: 2px; pointer-events: none; animation: fall 2.6s ease-in forwards; }
+    @keyframes fall { to { transform: translate(var(--drift), 650px) rotate(760deg); opacity: 0; } }
+    .toast { position: fixed; z-index: 50; left: 50%; bottom: 22px; transform: translate(-50%, 20px); padding: 12px 17px; border: 1px solid var(--line); border-radius: 12px; color: var(--text); background: #17224d; box-shadow: var(--shadow); opacity: 0; pointer-events: none; transition: .25s; font-size: .88rem; }
+    .toast.show { transform: translate(-50%, 0); opacity: 1; }
+    footer { border-top: 1px solid rgba(255,255,255,.08); padding: 27px 0; color: #8996bc; text-align: center; font-size: .83rem; }
+    footer strong { color: #c8d5fa; }
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; padding-top: 58px; gap: 44px; }
+      .hero-copy { text-align: center; }
+      .hero-copy .intro { margin-inline: auto; }
+      .pill-row { justify-content: center; }
+      .game-card { width: min(100%, 560px); margin-inline: auto; }
+      .meaning-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 560px) {
+      .container { width: min(100% - 28px, 1160px); }
+      .nav-inner { min-height: 66px; gap: 10px; }
+      .brand { font-size: 1.05rem; gap: 8px; }
+      .brand-mark { width: 35px; height: 35px; border-radius: 12px; }
+      .nav-links { display: none; }
+      .sound-toggle { min-height: 38px; padding: 8px 10px; font-size: .8rem; }
+      .hero { padding: 48px 0 55px; }
+      h1 { font-size: clamp(3rem, 14vw, 4.5rem); }
+      .intro { font-size: .98rem; }
+      .game-inner { padding: 23px 18px; }
+      .showcase { min-height: 230px; }
+      .flame-orbit { width: 190px; height: 190px; }
+      .flame-emoji { font-size: 4.4rem; }
+      .orbit-label.right { right: -19px; }
+      .orbit-label.left { left: -18px; }
+      .meaning-grid { grid-template-columns: 1fr; }
+      .meaning-card { padding: 19px; }
+      .result-actions { flex-direction: column; }
+      .result-actions button { width: 100%; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="ambient" aria-hidden="true">
+    <div class="orb one"></div><div class="orb two"></div><div class="orb three"></div>
+  </div>
+
+  <header class="navbar">
+    <div class="container nav-inner">
+      <a class="brand" href="#home" aria-label="AR Flames home">
+        <span class="brand-mark" aria-hidden="true">🔥</span>
+        <span>AR <span>Flames</span></span>
+      </a>
+      <nav class="nav-links" aria-label="Main navigation">
+        <a href="#home">Home</a>
+        <a href="#meanings">FLAMES meanings</a>
+        <a href="#result">Result</a>
+      </nav>
+      <button class="sound-toggle" id="soundToggle" type="button" aria-pressed="false" title="Toggle sound effects">
+        <span id="soundIcon" aria-hidden="true">🔇</span><span id="soundLabel">Sound off</span>
+      </button>
+    </div>
+  </header>
+
+  <main id="home">
+    <section class="container hero">
+      <div class="hero-copy">
+        <div class="eyebrow">A little game, a little magic</div>
+        <h1>Discover your <span class="gradient-text">FLAMES.</span></h1>
+        <p class="intro">Two names. One classic game. Enter your names and reveal a playful FLAMES result with a little sparkle along the way.</p>
+        <div class="pill-row" aria-label="App highlights">
+          <span class="pill">✦ Instant result</span>
+          <span class="pill">♡ Just for fun</span>
+          <span class="pill">✧ Mobile friendly</span>
+        </div>
+      </div>
+
+      <div class="game-card">
+        <div class="game-inner">
+          <div class="card-top">
+            <div class="card-kicker">✦ Your connection starts here</div>
+            <div class="live-dot">Ready to play</div>
+          </div>
+
+          <div class="showcase" aria-hidden="true">
+            <div class="flame-orbit">
+              <span class="orbit-label top">Friendship</span>
+              <span class="orbit-label right">Love</span>
+              <span class="orbit-label bottom">Destiny ✧</span>
+              <span class="orbit-label left">Magic</span>
+              <div class="flame-emoji">🔥</div>
+            </div>
+          </div>
+
+          <form id="flamesForm" novalidate>
+            <label class="field" for="name1">
+              <span>YOUR NAME</span>
+              <span class="input-wrap"><span class="field-icon" aria-hidden="true">✦</span><input id="name1" name="name1" type="text" maxlength="40" autocomplete="given-name" placeholder="Example:anbu" required></span>
+            </label>
+            <div class="heart-divider" aria-hidden="true">♡ &nbsp; AND &nbsp; ♡</div>
+            <label class="field" for="name2">
+              <span>THEIR NAME</span>
+              <span class="input-wrap"><span class="field-icon" aria-hidden="true">✧</span><input id="name2" name="name2" type="text" maxlength="40" autocomplete="off" placeholder="Example:ranjini" required></span>
+            </label>
+            <button class="primary-btn" type="submit">Reveal Our FLAMES <span aria-hidden="true">✦</span></button>
+            <p class="form-error" id="formError" role="alert" aria-live="polite"></p>
+            <p class="form-note">A classic name game for entertainment — not a real prediction of any relationship.</p>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section class="container result-section" id="result" aria-labelledby="resultName" aria-live="polite">
+      <div class="result-panel" id="resultPanel">
+        <div class="result-eyebrow">✦ Your FLAMES result ✦</div>
+        <div class="result-emoji" id="resultEmoji" aria-hidden="true">💫</div>
+        <div class="result-names" id="resultNames"></div>
+        <h2 class="result-name" id="resultName">Friendship</h2>
+        <p class="result-description" id="resultDescription"></p>
+        <div class="result-actions">
+          <button class="secondary-btn" id="shareBtn" type="button">↗ Share result</button>
+          <button class="secondary-btn" id="tryAgainBtn" type="button">↻ Try another pair</button>
+        </div>
+        <p class="result-disclaimer">Remember: FLAMES is only a fun game. Real connections are built through kindness, trust and communication.</p>
+      </div>
+    </section>
+
+    <section class="container section" id="meanings">
+      <h2 class="section-heading">What does <span class="gradient-text">FLAMES</span> mean?</h2>
+      <p class="section-subtitle">Each letter represents one playful result in the classic name game.</p>
+      <div class="meaning-grid">
+        <article class="meaning-card"><div class="emoji" aria-hidden="true">🤝</div><h3>F — Friends</h3><p>A friendly bond filled with fun, support and good memories.</p></article>
+        <article class="meaning-card"><div class="emoji" aria-hidden="true">❤️</div><h3>L — Love</h3><p>A sweet, romantic-themed result in this just-for-fun game.</p></article>
+        <article class="meaning-card"><div class="emoji" aria-hidden="true">🫶</div><h3>A — Affection</h3><p>Warmth, care and a little extra kindness.</p></article>
+        <article class="meaning-card"><div class="emoji" aria-hidden="true">💍</div><h3>M — Marriage</h3><p>A traditional FLAMES label — not a prediction of the future.</p></article>
+        <article class="meaning-card"><div class="emoji" aria-hidden="true">😅</div><h3>E — Enemy</h3><p>A silly game result. It says nothing about real-life compatibility.</p></article>
+        <article class="meaning-card"><div class="emoji" aria-hidden="true">👫</div><h3>S — Siblings</h3><p>A sibling-like connection, according to the classic game.</p></article>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">Made with <strong>♡</strong> by <strong>AR Flames</strong> · © <span id="year"></span> · Just for fun</div>
+  </footer>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // Supabase Configuration
+const SUPABASE_URL = "https://dokgtkvixqebyxeulkno.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_yNIJhkF68meLN1YRcyCr3w_-NIeI4Rn";
+
+// Connect to Supabase
+const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+);
+
+console.log("AR Flames: Supabase connected!");
+    "use strict";
+
+    const form = document.getElementById("flamesForm");
+    const name1Input = document.getElementById("name1");
+    const name2Input = document.getElementById("name2");
+    const formError = document.getElementById("formError");
+    const resultSection = document.getElementById("result");
+    const resultName = document.getElementById("resultName");
+    const resultEmoji = document.getElementById("resultEmoji");
+    const resultNames = document.getElementById("resultNames");
+    const resultDescription = document.getElementById("resultDescription");
+    const resultPanel = document.getElementById("resultPanel");
+    const shareBtn = document.getElementById("shareBtn");
+    const tryAgainBtn = document.getElementById("tryAgainBtn");
+    const soundToggle = document.getElementById("soundToggle");
+    const soundIcon = document.getElementById("soundIcon");
+    const soundLabel = document.getElementById("soundLabel");
+    const toast = document.getElementById("toast");
+
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    const results = {
+      F: { name: "Friends", emoji: "🤝", description: "A friendly and caring connection — the perfect excuse to celebrate your bond." },
+      L: { name: "Love", emoji: "❤️", description: "A romantic-themed result from the classic FLAMES game. Keep being kind to each other." },
+      A: { name: "Affection", emoji: "🫶", description: "Warmth, care and affection — a lovely result in this playful name game." },
+      M: { name: "Marriage", emoji: "💍", description: "The game landed on Marriage! Remember, this is a playful result, not a real-life prediction." },
+      E: { name: "Enemy", emoji: "😅", description: "A dramatic FLAMES result! Don't take it seriously — a game can't measure a real connection." },
+      S: { name: "Siblings", emoji: "👫", description: "A sibling-like connection according to the game. Real relationships are more than a letter." }
+    };
+
+    let soundEnabled = true;
+    let audioContext = null;
+    let latestShareText = "";
+
+    function normalizeName(value) {
+      // Keep letters only; normalize case and accents so names are compared consistently.
+      return value.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z]/g, "");
+    }
+
+    function calculateFlamesResult(firstName, secondName) {
+      const first = normalizeName(firstName);
+      const second = normalizeName(secondName);
+
+      // Custom result requested for this specific pair, regardless of name order.
+      if ((first === "anbu" && second === "ranjini") ||
+          (first === "ranjini" && second === "anbu")) {
+        return { code: "M", unmatchedCount: 0, custom: true };
+      }
+
+      const firstLetters = first.split("");
+      const secondLetters = second.split("");
+
+      // Remove matching letters one at a time, so repeated letters are handled correctly.
+      for (let i = firstLetters.length - 1; i >= 0; i--) {
+        const matchIndex = secondLetters.indexOf(firstLetters[i]);
+        if (matchIndex !== -1) {
+          firstLetters.splice(i, 1);
+          secondLetters.splice(matchIndex, 1);
+        }
+      }
+
+      const unmatchedCount = firstLetters.length + secondLetters.length;
+      // Identical names leave zero letters unmatched; use 1 as a consistent fallback.
+      const count = Math.max(unmatchedCount, 1);
+      const flames = ["F", "L", "A", "M", "E", "S"];
+      let index = 0;
+
+      while (flames.length > 1) {
+        index = (index + count - 1) % flames.length;
+        flames.splice(index, 1);
+      }
+      return { code: flames[0], unmatchedCount };
+    }
+
+    function playTone(frequency = 660, duration = 0.12, type = "sine") {
+      if (!soundEnabled) return;
+      try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return;
+        audioContext = audioContext || new AudioContextClass();
+        if (audioContext.state === "suspended") audioContext.resume();
+        const oscillator = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        oscillator.type = type;
+        oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+        gain.gain.setValueAtTime(0.0001, audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.075, audioContext.currentTime + 0.015);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + duration);
+        oscillator.connect(gain);
+        gain.connect(audioContext.destination);
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + duration + 0.02);
+      } catch (error) {
+        // Sound is optional; the app remains fully usable if audio is unavailable.
+      }
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      window.clearTimeout(showToast.timeoutId);
+      showToast.timeoutId = window.setTimeout(() => toast.classList.remove("show"), 2400);
+    }
+
+    function launchConfetti() {
+      const colors = ["#58e7ff", "#6385ff", "#ff7bd5", "#a8ffcf", "#ffd66e"];
+      for (let i = 0; i < 42; i++) {
+        const piece = document.createElement("span");
+        piece.className = "confetti";
+        piece.setAttribute("aria-hidden", "true");
+        piece.style.left = `${Math.random() * 100}%`;
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.animationDelay = `${Math.random() * 0.65}s`;
+        piece.style.setProperty("--drift", `${Math.round(Math.random() * 220 - 110)}px`);
+        resultPanel.appendChild(piece);
+        window.setTimeout(() => piece.remove(), 3400);
+      }
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const rawName1 = name1Input.value.trim();
+      const rawName2 = name2Input.value.trim();
+      const normalized1 = normalizeName(rawName1);
+      const normalized2 = normalizeName(rawName2);
+
+      if (!rawName1 || !rawName2) {
+        formError.textContent = "Please enter both names to reveal your result.";
+        (!rawName1 ? name1Input : name2Input).focus();
+        playTone(220, 0.16, "triangle");
+        return;
+      }
+      if (!normalized1 || !normalized2) {
+        formError.textContent = "Please use names containing English letters (A–Z).";
+        (!normalized1 ? name1Input : name2Input).focus();
+        return;
+      }
+      if (normalized1 === normalized2) {
+        formError.textContent = "You entered the same name twice. Try two different names for a result.";
+        name2Input.focus();
+        return;
+      }
+
+      formError.textContent = "";
+      const outcome = calculateFlamesResult(rawName1, rawName2);
+      const result = results[outcome.code];
+      // Save result to Supabase
+const { error } = await supabaseClient
+    .from("flames_results")
+    .insert([
+        {
+            first_name: rawName1,
+            second_name: rawName2,
+            result: result.name
+        }
+    ]);
+
+if (error) {
+    console.error("Supabase Save Error:", error);
+} else {
+    console.log("Result saved successfully!");
+}
+      resultEmoji.textContent = result.emoji;
+      resultNames.textContent = `${rawName1}  +  ${rawName2}`;
+      resultName.textContent = result.name;
+      resultDescription.textContent = result.description;
+      latestShareText = `🔥 AR Flames Result 🔥\n${rawName1} + ${rawName2} = ${result.name}\nTry the FLAMES name game! (Just for fun)`;
+      resultSection.classList.add("show");
+      launchConfetti();
+      playTone(523.25, 0.13);
+      window.setTimeout(() => playTone(659.25, 0.13), 120);
+      window.setTimeout(() => playTone(783.99, 0.2), 240);
+      resultSection.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+    });
+
+    soundToggle.hidden = true;
+    soundIcon.textContent = "🔊";
+    soundLabel.textContent = "Sound on";
+    soundToggle.setAttribute("aria-pressed", "true");
+
+    shareBtn.addEventListener("click", async () => {
+      if (!latestShareText) return;
+      try {
+        if (navigator.share) {
+          await navigator.share({ title: "AR Flames Result", text: latestShareText });
+        } else if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(latestShareText);
+          showToast("Result copied — ready to share!");
+        } else {
+          const textArea = document.createElement("textarea");
+          textArea.value = latestShareText;
+          textArea.setAttribute("readonly", "");
+          textArea.style.position = "fixed";
+          textArea.style.opacity = "0";
+          document.body.appendChild(textArea);
+          textArea.select();
+          const copied = document.execCommand("copy");
+          textArea.remove();
+          if (copied) showToast("Result copied — ready to share!");
+          else window.prompt("Copy your result:", latestShareText);
+        }
+      } catch (error) {
+        if (error && error.name !== "AbortError") showToast("Unable to share right now. Please try again.");
+      }
+    });
+
+    tryAgainBtn.addEventListener("click", () => {
+      resultSection.classList.remove("show");
+      formError.textContent = "";
+      name1Input.value = "";
+      name2Input.value = "";
+      latestShareText = "";
+      name1Input.focus();
+      document.getElementById("home").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    [name1Input, name2Input].forEach((input) => {
+      input.addEventListener("input", () => { if (formError.textContent) formError.textContent = ""; });
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && input === name1Input) {
+          event.preventDefault();
+          name2Input.focus();
+        }
+      });
+    });
+  </script>
+</body>
+</html>

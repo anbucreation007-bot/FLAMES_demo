@@ -1,0 +1,120 @@
+    footer { border-top: 1px solid rgba(255,255,255,.08); padding: 27px 0; color: #8996bc; text-align: center; font-size: .83rem; }
+
+    footer strong { color: #c8d5fa; }
+
+    @media (max-width: 900px) {
+
+      .hero { grid-template-columns: 1fr; padding-top: 58px; gap: 44px; }
+
+      .hero-copy { text-align: center; }
+
+      .hero-copy .intro { margin-inline: auto; }
+
+      .pill-row { justify-content: center; }
+
+      .game-card { width: min(100%, 560px); margin-inline: auto; }
+
+      .meaning-grid { grid-template-columns: repeat(2, 1fr); }
+
+    }
+
+    @media (max-width: 560px) {
+
+      .container { width: min(100% - 28px, 1160px); }
+
+      .nav-inner { min-height: 66px; gap: 10px; }
+
+      .brand { font-size: 1.05rem; gap: 8px; }
+
+      .brand-mark { width: 35px; height: 35px; border-radius: 12px; }
+
+      .nav-links { display: none; }
+
+      .sound-toggle { min-height: 38px; padding: 8px 10px; font-size: .8rem; }
+
+      .hero { padding: 48px 0 55px; }
+
+      h1 { font-size: clamp(3rem, 14vw, 4.5rem); }
+
+      .intro { font-size: .98rem; }
+
+      .game-inner { padding: 23px 18px; }
+
+      .showcase { min-height: 230px; }
+
+      .flame-orbit { width: 190px; height: 190px; }
+
+      .flame-emoji { font-size: 4.4rem; }
+
+      .orbit-label.right { right: -19px; }
+
+      .orbit-label.left { left: -18px; }
+
+      .meaning-grid { grid-template-columns: 1fr; }
+
+      .meaning-card { padding: 19px; }
+
+      .result-actions { flex-direction: column; }
+
+      .result-actions button { width: 100%; }
+
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+
+    }
+
+/* Pink-gradient theme overrides — HTML structure remains unchanged. */
+:root {
+  --bg: #19091b;
+  --panel: rgba(58, 18, 49, .76);
+  --panel-strong: rgba(70, 20, 58, .94);
+  --text: #fff7fc;
+  --muted: #e2b9d2;
+  --cyan: #ff9bd8;
+  --blue: #ff68b5;
+  --pink: #ffb2df;
+  --line: rgba(255, 176, 220, .22);
+  --shadow: 0 24px 80px rgba(20, 0, 15, .42);
+}
+body {
+  background:
+    radial-gradient(ellipse at 12% 12%, rgba(255, 82, 170, .25), transparent 34rem),
+    radial-gradient(ellipse at 88% 58%, rgba(255, 125, 202, .17), transparent 32rem),
+    radial-gradient(ellipse at 60% 100%, rgba(255, 45, 145, .15), transparent 28rem),
+    var(--bg);
+}
+.orb.one { background: #ff4fa8; }
+.orb.two { background: #ff8ccc; }
+.orb.three { background: #ff4dc4; }
+.brand-mark {
+  background: linear-gradient(135deg, #ffb2df, #ff65b5 65%, #ff3e91);
+  box-shadow: 0 0 28px rgba(255, 105, 181, .32);
+}
+.game-card {
+  background: linear-gradient(145deg, rgba(255, 176, 220, .9), rgba(255, 92, 173, .5) 42%, rgba(255, 185, 224, .65));
+  box-shadow: var(--shadow), 0 0 65px rgba(255, 80, 165, .16);
+}
+.game-card::before { background: linear-gradient(120deg, #ff8bc8, #ff5da8, #ffc0e3); }
+.game-inner { background: linear-gradient(150deg, rgba(75, 23, 62, .98), rgba(37, 12, 36, .99)); }
+.input-wrap input:focus { box-shadow: 0 0 0 4px rgba(255, 125, 195, .12); }
+.primary-btn {
+  color: #3b102d;
+  background: linear-gradient(100deg, #ffc0e3, #ff8bc8 58%, #ff5da8);
+  box-shadow: 0 10px 30px rgba(255, 91, 169, .22);
+}
+.flame-orbit { border-color: rgba(255, 164, 214, .25); background: radial-gradient(circle, rgba(255, 105, 181, .17), transparent 68%); }
+.flame-orbit::before { border-color: rgba(255, 175, 221, .3); }
+.flame-orbit::after { border-color: rgba(255, 123, 196, .22); }
+.flame-emoji { filter: drop-shadow(0 0 24px rgba(255, 105, 181, .5)); }
+.orbit-label { background: #451638; }
+.result-panel {
+  border-color: rgba(255, 150, 205, .38);
+  background: linear-gradient(145deg, rgba(76, 23, 61, .97), rgba(37, 12, 37, .98));
+  box-shadow: 0 22px 70px rgba(0,0,0,.28), 0 0 50px rgba(255, 76, 165, .12);
+}
+.result-panel::before { background: #ff5ba8; }
+.secondary-btn { background: rgba(255, 190, 224, .07); }
+.toast { background: #4b1a3c; }
